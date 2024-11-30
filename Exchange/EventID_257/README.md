@@ -189,8 +189,38 @@ Isolation of the host can be made from the endpoint security tab.
 | Execution | User Execution: T1204, T1204.002, T1204.001 |
 | Execution  | Command and Scripting Interpreter: T1059, T1059.003  |
 | Execution  | Native API: T1106  |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
+| Execution  | Windows Management Instrumentation: T1047 |
+| Discovery  | Account Discovery: T1087 |
+| Discovery  | System Service Discovery: T1007 |
+| Command and Control | Application Layer Protocol: T1071 |
+| Command and Control  | Non-Standard Port: T1571 |
+
+----
+
+## Artifacts
+| IOC Type   | Comment | Value |
+| ------------- | ------------- | ------------- |
+| URL  | Malicious | `https://files-ld.s3.us-east-2.amazonaws[.]com/59cbd215-76ea-434d-93ca-4d6aec3bac98-free-coffee.zip`|
+| SMTP Address | Malicious | 103.80.134.63 |
+| IPv4 -C2  | Malicious  | 37.120.233.226 |
+| Coffee.exe  | Malicious  | cd903ad2211cf7d166646d75e57fb866000f4a3b870b5ec759929be2fd81d334 |
+| Email Sent  | Malicious  | `free@coffeeshooop.com` |
+| URL  | Malicious  | `coffeeshooop.com` |
+
+----
+
+## Analysis Note
+> - Found a string that may be used as part of an injection method Hooks API calls
+> - Queries kernel debugger information
+> - Contains ability to terminate a process
+> - Found a reference to a WMI query string known to be used for VM detection
+> - Input file contains API references not part of its Import Address Table (IAT)
+> - Possibly checks for the presence of a forensics/monitoring tool
+> - Contacts 1 host (`IP: 37.120.233.226`, `Port/Protocol: 3451/TCP`, `Associated Process: PID 4640`, `Details: Romania`)
+> - YARA signature match - AsyncRAT
+> - Creates a mutant that is known to appear in malware
+> - Sample detected by CrowdStrike Static Analysis and ML with relatively high confidence
+
+
+
+
