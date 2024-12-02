@@ -50,9 +50,14 @@ attacker's IP address via recommended resources susch as VirusTotal, AbuseIPDB, 
 
 ![image](https://github.com/user-attachments/assets/a0fa56aa-1334-42cf-9d5d-7030b7712d75)
 
-Based on the information provided by VirusTotal, the IP address originating from China
-has been flagged as malicious by 11 antivirus engines.
+Based on the information provided by VirusTotal, the IP address `218.92.0.56` originating from China
+has been flagged as malicious by 14 antivirus engines.
 
+![image](https://github.com/user-attachments/assets/deb1fb41-9b5d-4c20-bde0-910498769100)
+
+On the LetsDefend threat intel tab, upon cross-referencing the source IP address mentioned, it was determined that the address had been categorized as malicious.
+
+![image](https://github.com/user-attachments/assets/204d9ba5-8e1c-4ebe-bad6-e79c04de9777)
 
 
 ---- 
