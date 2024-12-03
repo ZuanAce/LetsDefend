@@ -59,71 +59,74 @@ On the LetsDefend threat intel tab, upon cross-referencing the source IP address
 
 ![image](https://github.com/user-attachments/assets/204d9ba5-8e1c-4ebe-bad6-e79c04de9777)
 
+By cross-referencing the IP address with Abuseip the IP address was discovered to be  malicious and reported many times espcially in categories `ssh` and `brute-force`.
+
+![image](https://github.com/user-attachments/assets/cdfe20ec-ad3d-4af4-9fbc-c5b410789d2b)
+
+Thus, the answer to the playbook is **Yes**, the attacker IP is indeed suspicious.
 
 ---- 
 
 ## Analysis
-### Are there attachments or URLs in the email?
-As part of the investigation process, the first step of the playbook requires me to
-check if the email contains any attachments or URLs.
+### Traffic Analysis
+The third step of the playbook involves traffic analysis. Specifically, it suggests
+searching for the attacker's IP address within the log management system. From there,
+it's important to determine if there have been any requests to the server's
+SSH/RDP/VPN ports originating from the attacker's IP address.
 
-![image](https://github.com/user-attachments/assets/d11d5a52-d053-41b9-9e74-044527e8a30c)
+![image](https://github.com/user-attachments/assets/06a70496-ad82-44da-853b-0066f20b3259)
 
-From the email analysis, the playbook’s answer is **YES**, the mail contains URL and attachment.
+There are 15 firewall logs recorded from the IP address `218.92.0.56` attempting to
+connect to the host named **Matthew** at IP address `172.16.17.148`. These logs
+specifically detail attempts to access `port 3389`, commonly used for `Remote Desktop
+Protocol (RDP) connections`.
 
-----
+![image](https://github.com/user-attachments/assets/e7906127-e216-491c-97d7-8da3e1a86827)
 
-### Analyze URL/Attachment?
+The answer to the playbook is **No**, there is no request from the Attacker IP address to the target server's SSH or RDP port but multiple requests to the target client's SSH or RDP port.
 
-The next step is to further analyze the suspicious URL or attachment using third-party sandboxing tools to obtain additional insights and help determine if it is malicious or not.
+![image](https://github.com/user-attachments/assets/103978be-7fed-4bbc-b353-eec13ad0a785)
 
-![image](https://github.com/user-attachments/assets/ae17b2f0-c8e6-48c9-91e7-a3da2a1c15c9)
-
-I analyzed the URL using [VirusTotal](https://www.virustotal.com/gui/url/bb6460ae86e964854fcb2c379bb937f63611e6be3a25ded254e5ad4e9498b278). Virus Total is an online service that analyzes suspicious files and URLs to detect types of malware and malicious content using antivirus engines and website scanners. 
-
-![image](https://github.com/user-attachments/assets/2e3438e5-f205-4d91-90cd-0b80696d7d76)
-
-The results showed that 8 antivirus engines flagged the URL as malicious including Fortinet, BitDefender, and MalwareURL. In the crowdsourced context tab, it is categorized as silent builder. This indicates a high probability that the URL is malicious and poses a significant threat to the recipient's system and personal information.
-
-As part of the analysis in the second step, I used Hybrid Analysis to simulate the malware and gather more information about the threat.
-
-![image](https://github.com/user-attachments/assets/ef280341-277a-41d2-a064-d3c82f973cbd)
-
-The [report](https://www.hybrid-analysis.com/sample/6f33ae4bf134c49faa14517a275c039ca1818b24fc2304649869e399ab2fb389) indicates that the URL has a threat score of 100/100, signifying a high level of maliciousness if exploited. Upon examining the SHA256 hash `6f33ae4bf134c49faa14517a275c039ca1818b24fc2304649869e399ab2fb389`, it was linked to a file named `Coffee.exe`.
-
-![image](https://github.com/user-attachments/assets/d52e98c1-8269-4e50-a8f0-96a26d695955)
-
-Further [finding](https://www.hybrid-analysis.com/sample/6f33ae4bf134c49faa14517a275c039ca1818b24fc2304649869e399ab2fb389) revealed that the URL provided in the email imitates the Adobe login
-page, making it difficult for the user to differentiate between the real and fake login
-page.
-
-> [!NOTE]
-> Additional Findings
-> - Found a string that may be used as part of an injection method Hooks API calls
-> - Queries kernel debugger information
-> - Contains ability to terminate a process
-> - Found a reference to a WMI query string known to be used for VM detection
-> - Input file contains API references not part of its Import Address Table (IAT)
-> - Possibly checks for the presence of a forensics/monitoring tool
-> - Contacts 1 host (`IP: 37.120.233.226`, `Port/Protocol: 3451/TCP`, `Associated Process: PID 4640`, `Details: Romania`)
-> - YARA signature match - AsyncRAT
-> - Creates a mutant that is known to appear in malware
-> - Sample detected by CrowdStrike Static Analysis and ML with relatively high confidence
-
-From the analysis, the playbook’s answer is **Malicious**, the URL contained in the email is malicious. 
 
 ----
 
-### Check If Mail Delivered to User?
-In the 3rd step of the playbook, I was required to check if the mail was delivered to the user.
+### Determine the Scope
 
-![image](https://github.com/user-attachments/assets/36e9636a-9226-4845-b84e-b88da6471d63)
+The next step in the playbook involves investigating whether the attacker's IP address
+has attempted to establish SSH/RDP connections with multiple servers or clients as the
+target. This step aims to determine if the attack is targeted toward a single specific
+server or if multiple servers or clients are being targeted simultaneously.
 
-I could determine this by looking at the "device action" part of the alert details, which
-will tell us if the email was delivered to the user's inbox, marked as spam, or blocked by
-the email security system.
+![image](https://github.com/user-attachments/assets/57fdf941-ff10-4d7d-9539-834f557b0162)
 
-![image](https://github.com/user-attachments/assets/902453f4-741d-4ef2-8bf5-44985407f59d)
+The answer is **No**, only one client is targeted. Upon inspecting the log management
+and filtering for the attacker's source address, it reveals only one destination IP address,
+which is `172.16.17.148`, corresponding to the host named **Matthew**.
+
+![image](https://github.com/user-attachments/assets/bc8fb50c-0ce5-4237-be63-5db12f1af43e)
+
+----
+
+### Log Management
+To determine if the brute force attack was successful, we need to analyze the SSH/RDP
+audit logs. Here's how to do it for both Windows and Linux systems:
+For Windows:
+- Look for Event ID `4624`, which indicates a successful login.
+- Also, examine Event ID `4625`, which signifies a failed login attempt.
+
+If successful logins are recorded after multiple failed login attempts from the same
+source address to the same target, it indicates that the brute force attack was
+successful.
+
+![image](https://github.com/user-attachments/assets/a421e83c-e035-430b-a4a1-8d77f9026c1d)
+
+At the log management tab, I found that on March 7, 2024, at 11:44 AM, several failed logon events were observed.
+- Several failed logon events observed
+- Usernames attempted: `sysadmin`, `admin`, `guest`
+- Event ID: `4625` (An account failed to log on)
+- Error Code: 0xC000006D (Unknown user name or bad password)
+
+![image](https://github.com/user-attachments/assets/0749fe3a-f4c1-48bb-ba89-8b060a1dc54c)
 
 The answer to the 3rd part of the playbook is: **Delivered**, the email was allowed and delivered to the user.
 
