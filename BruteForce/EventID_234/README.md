@@ -83,7 +83,7 @@ Protocol (RDP) connections`.
 
 ![image](https://github.com/user-attachments/assets/e7906127-e216-491c-97d7-8da3e1a86827)
 
-The answer to the playbook is **No**, there is no request from the Attacker IP address to the target server's SSH or RDP port but multiple requests to the target client's SSH or RDP port.
+The answer to the playbook is **Yes**, there are multiple requests from the Attacker IP address to the target server's SSH or RDP port.
 
 ![image](https://github.com/user-attachments/assets/103978be-7fed-4bbc-b353-eec13ad0a785)
 
@@ -128,100 +128,103 @@ At the log management tab, I found that on March 7, 2024, at 11:44 AM, several f
 
 ![image](https://github.com/user-attachments/assets/0749fe3a-f4c1-48bb-ba89-8b060a1dc54c)
 
-The answer to the 3rd part of the playbook is: **Delivered**, the email was allowed and delivered to the user.
+These failed logon attempts indicate potential unauthorized access attempts or a brute force attack targeting the system. The use of generic usernames like `sysadmin`, `admin`, and `guest` suggests an attempt to exploit common account names. Following numerous failed logon attempts, the attacker successfully accessed the host using the username **Matthew** at Mar, 07, 2024, 11:44 AM.
 
-----
+![image](https://github.com/user-attachments/assets/fbdcac57-5dd8-4ea8-b0fe-6a0990107045)
 
-### Delete Email From Recipient!
-The 4th step is to delete the email from recipient as the playbook requested.
+![image](https://github.com/user-attachments/assets/4bb1c3f5-5a1f-4d69-94bb-c9e5d991b839)
 
-![image](https://github.com/user-attachments/assets/874c0619-8d99-41af-b2bd-54bf974f8f6d)
+After the successful logon, the attacker executed the following commands on the host.
+- Command: "C:\Windows\system32\cmd.exe"
+- Command: whoami (`Mar 7 2024 11:45:51`, Process ID: `5360`)
+- Command: net user letsdefend (`Mar 7 2024 11:45:58`, Process ID: `5360`)
+- Command: net localgroup administrators (`Mar 7 2024 11:46:34`, Process ID: `5360`)
+- Command: netstat -ano (`Mar 7 2024 11:46:53`, Process ID: `5360`)
 
-Just click on the **Delete** button.
+These commands indicate the attacker's attempt to gain information about the system, users, and network connections, potentially for further malicious activities.
 
-----
+![image](https://github.com/user-attachments/assets/0bb0a7ed-5866-42cb-a206-00fb574b67b2)
 
-### Check if Someone Opened the Malicious File/URL?
-The next step of the playbook is to check if someone opened the malicious file/URL.
-
-![image](https://github.com/user-attachments/assets/f1a848b9-fbc7-47ae-becb-d22fcf0ea26d)
-
-To do this, I need to go to the "Log Management" page and check if the C2 (command-and-control) address was accessed. When I filter for the given Felix’s client IP address we can see the traffic
-
-![image](https://github.com/user-attachments/assets/8252e082-81b1-4f3e-acdb-69d9b9d87cdc)
-
-On the raw log of Proxy traffic. We can see the malicious URL: `https://files-ld.s3.us-east-2.amazonaws.com/59cbd215-76ea-434d-93ca-4d6aec3bac98-free-coffee.zip`
-
-![image](https://github.com/user-attachments/assets/94db3e9e-f0a1-4d70-81c6-2f51f096dedf)
-
-![image](https://github.com/user-attachments/assets/576c7aea-86df-4608-b59f-7b9918603320)
-
-Additionally, I could also see that the coffee.exe has run on the Felix’s host.
-
-![image](https://github.com/user-attachments/assets/813475ab-64c8-4848-89f5-bd8f37b64c62)
-
-In short, it can be concluded that Coffee.exe connects to the C2 address `37.120.233.226`. A malicious address was accessed by the host machine. And the answer is **Opened**.
 
 ----
 
 ## Containment
-Based on the information gathered during the investigation, it is highly likely that the user credentials have been compromised and sensitive information may have been exfiltrated. To prevent further data loss or unauthorized access, it is recommended to isolate the system from the network immediately.
+### Should the Device be Isolated
+The step is to determine if the device require isolation. 
 
-![image](https://github.com/user-attachments/assets/04ab71b4-8e75-4578-bd67-f62aa2fa142a)
+![image](https://github.com/user-attachments/assets/af202195-c312-4689-ad65-2c2b581575a1)
+
+Based on the information gathered during the investigation, it is highly likely that the system has been compromised. To prevent further data loss or unauthorized access, it is recommended to isolate the system from the network immediately. The answer to the playbook is **Yes**.
 
 Isolation of the host can be made from the endpoint security tab.
 
-> Hostname: Felix
+> Hostname: Matthew
 >
-> IP Address: 172.16.20.151
+> IP Address: 172.16.17.148
+
+![image](https://github.com/user-attachments/assets/179e63d5-468d-4e37-8cff-24ee045a626e)
 
 ----
 
-## Remediation actions
-- Educate employees about how to identify and report suspicious emails, and provide training on how to avoid falling for phishing scams.
-- Reset any compromised user credentials and implement a strong password policy and strong MFA.
-- Implement email filtering and security measures, such as DKIM and SPF, to help detect and block spoofed emails.
+## Lesson Learned
+- Effective monitoring and alerting systems are essential for detecting and responding to suspicious activities promptly.
+- Monitoring for specific indicators of compromise (IOCs) helps detect potential security threats, but they should be supplemented with in-depth analysis.
+- Rapid response to security incidents is critical for minimizing the impact of cyber
+threats.
+- Educating users and administrators about common attack vectors, such as brute force attacks, helps mitigate risks associated with unauthorized access attempts.
+- Enabling and collecting logs from operating systems can significantly enhance visibility into your network's security posture.
+
+----
+
+## Remediation Actions
+- Enforce strong password policies, including the use of complex passwords and regular password changes, to mitigate the risk of brute force attacks. Consider implementing multi-factor authentication (MFA) for an added layer of security.
+- Restrict external network access to Matthew and Server instances accessible via the public internet, until the necessary upgrades can be performed
+- Set up a VPN solution to provide secure remote access to the network. VPNs encrypt data transmitted between remote devices and the network, reducing the risk of interception or unauthorized access.
+- Isolate the compromised machine from the network to prevent the attacker from accessing other resources and systems within the organization.
+
+----
+
+## Summary
+The alert report highlights the detection of a suspicious web attack targeting the host named Matthew (IP: `172.16.17.148`). The attack was triggered by the SOC176 - RDP Brute Force Detected rule, indicating a potential vulnerability that threat actors exploit to gain unauthorized access to machines via RDP (Remote Desktop Protocol).<br>
+
+The report outlines a series of suspicious activities targeting a host named "Matthew" with the IP address `172.16.17.148`. The incident was triggered by the SOC176 rule for RDP Brute Force Detection, highlighting repeated login failures from the external source IP address `218.92.0.56`.<br>
+
+Upon investigation, it was discovered that the source IP address had a malicious reputation according to multiple threat intelligence platforms, indicating potential security risks. Additionally, 15 firewall logs recorded attempts to connect to the host "Matthew" over RDP, suggesting a concerted effort to gain unauthorized access.<br>
+
+Despite failed login attempts, the attacker successfully logged in using the username "Matthew." Subsequent analysis revealed a series of command executions, including attempts to gather system information and escalate privileges.
 
 ----
 
 ## MITRE ATT&CK
 | MITRE Tactics   | MITRE Techniques |
 | ------------- | ------------- |
-| Initial Access  | Spearphishing Attachment (T1598.002), Spearphishing Link (T1598.003) |
-| Execution | User Execution: T1204, T1204.002, T1204.001 |
+| Initial Access  | Valid Accounts: T1078, T1078.003 |
+| Discovery | Account Discovery: T1087, T1087.001 |
 | Execution  | Command and Scripting Interpreter: T1059, T1059.003  |
-| Execution  | Native API: T1106  |
-| Execution  | Windows Management Instrumentation: T1047 |
-| Discovery  | Account Discovery: T1087 |
-| Discovery  | System Service Discovery: T1007 |
-| Command and Control | Application Layer Protocol: T1071 |
-| Command and Control  | Non-Standard Port: T1571 |
+| Credential Access  | Brute Force: T1110, T1110.001  |
 
 ----
 
 ## Artifacts
 | IOC Type   | Comment | Value |
 | ------------- | ------------- | ------------- |
-| URL  | Malicious | `https://files-ld.s3.us-east-2.amazonaws[.]com/59cbd215-76ea-434d-93ca-4d6aec3bac98-free-coffee.zip`|
-| SMTP Address | Malicious | 103.80.134.63 |
-| IPv4 -C2  | Malicious  | 37.120.233.226 |
-| Coffee.exe  | Malicious  | cd903ad2211cf7d166646d75e57fb866000f4a3b870b5ec759929be2fd81d334 |
-| Email Sent  | Malicious  | `free@coffeeshooop.com` |
-| URL  | Malicious  | `coffeeshooop.com` |
+| IP Address  | Attacker IP | `218.92.0.56`|
+| IP Address  | Victim IP | `172.16.171.148`|
+| Username  | Abused username | admin |
+| Username  | Abused username  | guest |
+| Username  | Abused username  | sysadmin |
+| User  | Victim  | Matthew |
 
 ----
 
 ## Analysis Note
-> - Found a string that may be used as part of an injection method Hooks API calls
-> - Queries kernel debugger information
-> - Contains ability to terminate a process
-> - Found a reference to a WMI query string known to be used for VM detection
-> - Input file contains API references not part of its Import Address Table (IAT)
-> - Possibly checks for the presence of a forensics/monitoring tool
-> - Contacts 1 host (`IP: 37.120.233.226`, `Port/Protocol: 3451/TCP`, `Associated Process: PID 4640`, `Details: Romania`)
-> - YARA signature match - AsyncRAT
-> - Creates a mutant that is known to appear in malware
-> - Sample detected by CrowdStrike Static Analysis and ML with relatively high confidence
+> - `218.92.0.56` (Source IP: Malicious)
+> - The IP was flagged by 14 AV engines as malicious (VirusTotal)
+> - The IP was reported 458,120 times for malicious activities such as port scans, and brute force attacks via SSH (AbuseIPDB)
+> - Origin: Shanghai, China (AbuseIPDB)
+> - Usage Type: Fixed Line ISP (AbuseIPDB)
+> - Domain Name: chinatelecom.cn (AbuseIPDB)
+> - LetsDefend Threat Intel reported `218.92.0.56` as malicious on `Mar, 08, 2024, 02:33 PM`
 
 
 
